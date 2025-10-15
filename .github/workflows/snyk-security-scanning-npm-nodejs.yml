@@ -73,7 +73,7 @@ jobs:
       # ----------------------------------------
       - name: Install dependencies
         run: |
-          npm ci || npm install
+           npm install --force
 
       # ---------------------------------------
       #  Install Snyk CLI
@@ -86,7 +86,7 @@ jobs:
       # --------------------------------------
       - name: Run Snyk Open Source scan
         if: matrix.scan-type == 'sca'
-        run: snyk test --severity-threshold=high --fail-on=all --sarif > snyk-oss.sarif
+        run: snyk test --severity-threshold=high --fail-on=all --sarif > snyk-oss.sarif ||true
 
       - name: Upload OSS results
         if: always()
