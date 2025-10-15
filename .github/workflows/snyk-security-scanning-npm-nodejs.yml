@@ -1,0 +1,168 @@
+name: snyk-scan
+concurrency:
+  group: snyk-security-${{ github.event.number || github.run_id }}
+  cancel-in-progress: false
+
+on:
+  push:
+    branches:
+      - stable  #   change branch as needed
+  pull_request:
+    branches:
+      - stable    #  change branch as needed
+  workflow_dispatch:
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scan-type: [sca, sast, IaC, container]
+      fail-fast: false
+
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      NODE_VERSION: ${{ vars.NODE_VERSION || secrets.NODE_VERSION || '' }}
+      # Priority:
+      # 1. GitHub variable (NODE_VERSION)
+      # 2. Secret (NODE_VERSION)
+      # 3. Fallback to package.json engines.node or LTS
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      # --------------------------------------
+      #  Checkout repository
+      # --------------------------------------
+      - uses: actions/checkout@v4
+
+      # --------------------------------------
+      #  Detect Node.js version dynamically
+      # ---------------------------------------
+      - name: Detect Node.js version
+        id: detect
+        run: |
+          if [ -n "${{ env.NODE_VERSION }}" ]; then
+            echo "Using configured Node.js version: ${{ env.NODE_VERSION }}"
+            DETECTED_VERSION="${{ env.NODE_VERSION }}"
+          elif [ -f "package.json" ]; then
+            DETECTED_VERSION=$(jq -r '.engines.node // empty' package.json || echo "")
+            if [ -z "$DETECTED_VERSION" ]; then
+              DETECTED_VERSION="lts/*"
+            fi
+            echo "Detected Node.js version from package.json: $DETECTED_VERSION"
+          else
+            DETECTED_VERSION="lts/*"
+            echo "Defaulting to Node.js LTS: $DETECTED_VERSION"
+          fi
+          echo "node_version=$DETECTED_VERSION" >> $GITHUB_OUTPUT
+
+      # ---------------------------------------
+      #  Setup Node.js environment
+      # ---------------------------------------
+      - name: Set up Node.js ${{ steps.detect.outputs.node_version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.detect.outputs.node_version }}
+          cache: npm
+
+      # ----------------------------------------
+      #  Install dependencies
+      # ----------------------------------------
+      - name: Install dependencies
+        run: |
+          npm ci || npm install
+
+      # ---------------------------------------
+      #  Install Snyk CLI
+      # ---------------------------------------
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@v4   # best practice: pin to a release or commit
+
+      # --------------------------------------
+      #  Snyk Open Source (SCA)
+      # --------------------------------------
+      - name: Run Snyk Open Source scan
+        if: matrix.scan-type == 'sca'
+        run: snyk test --severity-threshold=high --fail-on=all --sarif > snyk-oss.sarif
+
+      - name: Upload OSS results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-oss-report
+          path: snyk-oss.sarif
+
+      - name: Monitor Open Source in Snyk dashboard
+        if: always()
+        run: snyk monitor #--project-name=<specific project name> or --org=<target org>
+
+      # ---------------------------------------------
+      #  Snyk Code (SAST)
+      # ---------------------------------------------
+      - name: Run Snyk Code scan
+        if: matrix.scan-type == 'sast'
+        run: snyk code test --severity-threshold=high --fail-on=all --sarif > snyk-code.sarif
+
+      - name: Upload Code results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-code-report
+          path: snyk-code.sarif
+
+      # -----------------------------
+      # Snyk Infrastructure as Code (IaC)
+      # -----------------------------
+      - name: Run Snyk IaC scan
+        if: matrix.scan-type == 'IaC'
+        run: snyk iac test --severity-threshold=high --fail-on=all --sarif > snyk-iac.sarif
+
+      - name: Upload IaC results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-iac-report
+          path: snyk-iac.sarif
+
+
+      # -----------------------------
+      # Snyk Container Scan
+      # -----------------------------
+      - name: Build Docker image
+        if: matrix.scan-type == 'container'
+        run: docker build -t test-app:latest . #test example of building a docker image 
+
+      - name: Run Snyk Container scan
+        if: matrix.scan-type == 'container'
+        run: snyk container test node-app:latest --file=Dockerfile --severity-threshold=high --fail-on=all --sarif > snyk-container.sarif
+
+      - name: Upload Container results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-container-report
+          path: snyk-container.sarif
+
+      - name: Monitor Container in Snyk dashboard
+        if: always()
+        run: snyk container monitor node-app:latest
+
+      # ------------------------------------------------
+      #  Post Job: Bundle all SARIF reports
+      # ------------------------------------------------
+      - name: Create bundle of all SARIF reports
+        if: always()
+        run: |
+          mkdir -p snyk-reports
+          mv *.sarif snyk-reports/ || true
+          tar -czf snyk-reports.tar.gz snyk-reports
+
+      - name: Upload bundled reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-bundle
+          path: snyk-reports.tar.gz
