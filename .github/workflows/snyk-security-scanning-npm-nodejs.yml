@@ -79,7 +79,7 @@ jobs:
       #  Install Snyk CLI
       # ---------------------------------------
       - name: Set up Snyk CLI
-        uses: snyk/actions/setup@v4   # best practice: pin to a release or commit
+        uses: snyk/actions/setup@master   # best practice: pin to a release or commit
 
       # --------------------------------------
       #  Snyk Open Source (SCA)
