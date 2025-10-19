@@ -6,9 +6,9 @@
 
 name: AppCheck-DAST-Scan
 on:
-  push:
+  pull_request:
     branches:
-      - main
+      - stable
   workflow_dispatch: {}
 
 concurrency:
