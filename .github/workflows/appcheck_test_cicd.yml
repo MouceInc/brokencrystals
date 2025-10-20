@@ -75,10 +75,7 @@ jobs:
           echo $AppCheck_API
           APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action start --scan-id "$SCAN_ID"
           
-          echo "::add-mask::$AppCheck_API"
-          echo "Scan started with AppCheck API key."
-
-
+          
           # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
           unset AppCheck_API || true
