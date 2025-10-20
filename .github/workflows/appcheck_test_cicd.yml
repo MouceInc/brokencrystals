@@ -72,7 +72,8 @@ jobs:
           # Immediately pass the secret to the CLI via stdin to avoid persisting as env or file.
           # Replace --token-stdin with the appropriate flag your CLI supports for stdin-token consumption.
           #Test the pulling of the API
-          export APPCHECK_API_KEY=$AppCheck_API 
+          export APPCHECK_API_KEY=$AppCheck_API
+          echo $APPCHECK_API_KEY
           ./appcheck-cli --action start --scan-id "$SCAN_ID"
           
           
