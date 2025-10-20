@@ -15,10 +15,10 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
-# env:
+env:
 #   AWS_REGION: ${{ vars.AWS_REGION }}
-#   AWS_S3_BUCKET: ${{ vars.APPCHECK_S3_BUCKET }}
-#   SCAN_ID: ${{ secrets.SCAN_ID }}
+   AWS_S3_BUCKET: ${{ vars.APPCHECK_S3_BUCKET }}
+   SCAN_ID: ${{ vars.SCAN_ID }}
 #   AWS_ARN: ${{ vars.AWS_SEC_PROD_ROLE_ARN }}
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
 
       - name: Download AppCheck CLI from S3
         run: |
-          aws s3 cp s3://${{ vars.AWS_S3_BUCKET }}/appcheck-cli ./appcheck-cli
+          aws s3 cp s3://$AWS_S3_BUCKET/appcheck-cli ./appcheck-cli
           chmod +x ./appcheck-cli
 
       - name: Start AppCheck Scan (fetch secret from Secrets Manager in-memory)
@@ -61,7 +61,7 @@ jobs:
             --region  ${{ vars.AWS_REGION }}\
             --query SecretString --output text)
 
-          # Immediately pass secret to the CLI via stdin to avoid persisting as env or file.
+          # Immediately pass the secret to the CLI via stdin to avoid persisting as env or file.
           # Replace --token-stdin with the appropriate flag your CLI supports for stdin-token consumption.
           printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action start --scan-id "$SCAN_ID"
 
