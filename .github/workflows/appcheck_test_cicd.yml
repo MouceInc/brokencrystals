@@ -35,7 +35,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ARN }}
+          role-to-assume: ${{ vars.AWS_SECURITY_PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
@@ -83,7 +83,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ARN }}
+          role-to-assume: ${{ vars.AWS_SECURITY_PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
@@ -122,7 +122,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ARN }}
+          role-to-assume: ${{ vars.AWS_SECURITY_PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
@@ -159,7 +159,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ARN }}
+          role-to-assume: ${{ vars.AWS_SECURITY_PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
