@@ -40,7 +40,7 @@ jobs:
 
       - name: Download AppCheck CLI from S3
         run: |
-          aws s3 cp s3://$AWS_S3_BUCKET/appcheck-cli ./appcheck-cli
+          aws s3 cp s3://${{ vars.AWS_S3_BUCKET }}/appcheck-cli ./appcheck-cli
           chmod +x ./appcheck-cli
 
       - name: Start AppCheck Scan (fetch secret from Secrets Manager in-memory)
