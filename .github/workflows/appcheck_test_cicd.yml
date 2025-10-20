@@ -24,10 +24,11 @@ env:
 jobs:
   scan_job:
     runs-on: ubuntu-latest
+    continue-on-error: false
     permissions:
       id-token: write
       contents: read
-    continue-on-error: false
+   
 
 
     steps:
@@ -39,6 +40,11 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_SECURITY_PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+      - name: check public IP address of runner
+        run: curl -s https://api.ipify.org
+      
+      - name: Check Internal IP address of runner
+        run: ip a
 
       - name: Download AppCheck CLI from S3
         run: |
@@ -68,13 +74,17 @@ jobs:
           #Test the pulling of the API
           echo $AppCheck_API
           APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action start --scan-id "$SCAN_ID"
-          echo "HERE IS THE API:"$APPCHECK_API_KEY
+          
+          echo "::add-mask::$AppCheck_API"
+          echo "Scan started with AppCheck API key."
+
 
           # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
           unset AppCheck_API || true
           unset APPCHECK_API_KEY || true
-      
+          
+  
 
   watch_scan_1:
     runs-on: ubuntu-latest
