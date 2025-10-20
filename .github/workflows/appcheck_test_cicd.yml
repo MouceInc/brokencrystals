@@ -64,11 +64,13 @@ jobs:
           # Immediately pass the secret to the CLI via stdin to avoid persisting as env or file.
           # Replace --token-stdin with the appropriate flag your CLI supports for stdin-token consumption.
           
-          APPCHECK_API_KEY="$AppCheck_API" ./appcheck-cli --action start --scan-id "$SCAN_ID"
+          APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action start --scan-id "$SCAN_ID"
 
           # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
           unset AppCheck_API || true
+          unset APPCHECK_API_KEY || true
+      
 
   watch_scan_1:
     runs-on: ubuntu-latest
