@@ -15,11 +15,11 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
-env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  AWS_S3_BUCKET: ${{ vars.APPCHECK_S3_BUCKET }}
-  SCAN_ID: ${{ secrets.SCAN_ID }}
-  AWS_ARN: ${{ vars.AWS_SEC_PROD_ROLE_ARN }}
+# env:
+#   AWS_REGION: ${{ vars.AWS_REGION }}
+#   AWS_S3_BUCKET: ${{ vars.APPCHECK_S3_BUCKET }}
+#   SCAN_ID: ${{ secrets.SCAN_ID }}
+#   AWS_ARN: ${{ vars.AWS_SEC_PROD_ROLE_ARN }}
 
 jobs:
   scan_job:
@@ -35,8 +35,8 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.AWS_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
         run: |
@@ -58,7 +58,7 @@ jobs:
           # Do NOT write it to files, GITHUB_ENV or step outputs.
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
-            --region  ${{ env.AWS_REGION }}\
+            --region  ${{ vars.AWS_REGION }}\
             --query SecretString --output text)
 
           # Immediately pass secret to the CLI via stdin to avoid persisting as env or file.
@@ -83,8 +83,8 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.AWS_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
         run: |
@@ -100,7 +100,7 @@ jobs:
 
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
-            --region ${{ env.AWS_REGION }} \
+            --region ${{ vars.AWS_REGION }} \
             --query SecretString --output text)
 
           printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action watch --scan-id "$SCAN_ID"
@@ -122,8 +122,8 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.AWS_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
         run: |
@@ -139,7 +139,7 @@ jobs:
 
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
-            --region  ${{ env.AWS_REGION }} \
+            --region  ${{ vars.AWS_REGION }} \
             --query SecretString --output text)
 
           printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action watch --scan-id "$SCAN_ID"
@@ -159,8 +159,8 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.AWS_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Download AppCheck CLI from S3
         run: |
@@ -176,7 +176,7 @@ jobs:
 
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
-            --region  ${{ env.AWS_REGION }}\
+            --region  ${{ vars.AWS_REGION }}\
             --query SecretString --output text)
 
           for i in {1..5}; do
