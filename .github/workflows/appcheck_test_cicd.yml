@@ -63,7 +63,7 @@ jobs:
 
           # Immediately pass the secret to the CLI via stdin to avoid persisting as env or file.
           # Replace --token-stdin with the appropriate flag your CLI supports for stdin-token consumption.
-          printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action start --scan-id "$SCAN_ID"
+          printf '%s' "$AppCheck_API" | ./appcheck-cli --action start --scan-id "$SCAN_ID"
 
           # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
@@ -103,7 +103,7 @@ jobs:
             --region ${{ vars.AWS_REGION }} \
             --query SecretString --output text)
 
-          printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action watch --scan-id "$SCAN_ID"
+          printf '%s' "$AppCheck_API" | ./appcheck-cli --action watch --scan-id "$SCAN_ID"
 
           AppCheck_API=""
           unset AppCheck_API || true
@@ -142,7 +142,7 @@ jobs:
             --region  ${{ vars.AWS_REGION }} \
             --query SecretString --output text)
 
-          printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action watch --scan-id "$SCAN_ID"
+          printf '%s' "$AppCheck_API" | ./appcheck-cli  --action watch --scan-id "$SCAN_ID"
 
           AppCheck_API=""
           unset AppCheck_API || true
@@ -180,13 +180,13 @@ jobs:
             --query SecretString --output text)
 
           for i in {1..5}; do
-            printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action results --scan-id "$SCAN_ID" --display-vulns && break
+            printf '%s' "$AppCheck_API" | ./appcheck-cli --action results --scan-id "$SCAN_ID" --display-vulns && break
             echo "Retrying results in 30 seconds..."
             sleep 30
           done
 
           # Fallback
-          printf '%s' "$AppCheck_API" | ./appcheck-cli --token-stdin --action details --scan-id "$SCAN_ID" --display-vulns
+          printf '%s' "$AppCheck_API" | ./appcheck-cli --action details --scan-id "$SCAN_ID" --display-vulns
 
           AppCheck_API=""
           unset AppCheck_API || true
