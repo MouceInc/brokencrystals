@@ -27,6 +27,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    continue-on-error: false
+
 
     steps:
       - name: Checkout code
@@ -66,6 +68,7 @@ jobs:
           #Test the pulling of the API
           echo $AppCheck_API
           APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action start --scan-id "$SCAN_ID"
+          echo "HERE IS THE API:"$APPCHECK_API_KEY
 
           # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
@@ -108,6 +111,7 @@ jobs:
             --query SecretString --output text)
 
            APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action watch --scan-id "$SCAN_ID"
+        
 
           AppCheck_API=""
           unset AppCheck_API || true
