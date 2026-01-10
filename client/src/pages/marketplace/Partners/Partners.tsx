@@ -11,7 +11,7 @@ import type { Partner } from '../../../interfaces/Partner';
 
 export const Partners: FC = () => {
   const PARTNER_DEFAULT_USERNAME = 'walter100';
-  const PARTNER_DEFAULT_PASSWORD = 'Heisenberg123';
+  const PARTNER_DEFAULT_PASSWORD = process.env.PARTNER_DEFAULT_PASSWORD;
 
   const [partners, setPartners] = useState<Array<Partner>>([]);
 

@@ -95,7 +95,7 @@ export const Login: FC = () => {
       getLdap(ldapProfileLink)
         .then((data) => setLdapResponse(data))
         .then(() => {
-          window.location.href = state ? state.from : '/';
+          window.location.reload();
         });
     }
   };

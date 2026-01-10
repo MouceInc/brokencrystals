@@ -661,7 +661,7 @@
                   url: dest,
                   cache: false
                   }).done(function( msg ) {
-                      content.html('<div class="vbox-inline">'+ msg +'</div>');
+                      content.text('<div class="vbox-inline">'+ msg +'</div>');
                       preloadFirst();
 
                   }).fail(function() {

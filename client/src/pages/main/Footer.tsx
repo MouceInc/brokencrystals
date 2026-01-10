@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { postRender, postSubscriptions } from '../../api/httpClient';
 import { InnerHtml } from '../../components';
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
 export const Footer: FC = () => {
   const [subscriptions, setSubscriptions] = useState<string>('');
   const [subscriptionsResponse, setSubscriptionsResponse] = useState<string>();
@@ -172,7 +173,7 @@ export const Footer: FC = () => {
             </div>
             {window.location.search && (
               <span className="dangerous-html">
-                <InnerHtml html={decodeURIComponent(window.location.search)} />
+                <InnerHtml html={DOMPurify.sanitize(decodeURIComponent(window.location.search))} />
               </span>
             )}
           </div>
