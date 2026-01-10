@@ -542,7 +542,7 @@ export class UsersController {
           email,
           Buffer.from(xmlDoc.toString(), 'utf8')
         );
-        return xmlDoc.toString(true);
+        return this.res.json(xmlDoc.toString(true));
       } else {
         await this.usersService.updatePhoto(email, file_buffer);
       }

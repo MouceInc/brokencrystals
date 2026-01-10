@@ -54,7 +54,7 @@ export const Sign: FC = () => {
         <>
           <label htmlFor="file-input" className="file-input-label">
             <img
-              src={userImage || 'assets/img/profile.png'}
+              src={encodeURIComponent(userImage || 'assets/img/profile.png')}
               alt=""
               className="profile-image"
             />

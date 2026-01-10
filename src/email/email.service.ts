@@ -11,8 +11,7 @@ export class EmailService {
     port: 1025,
     secure: false,
     auth: {
-      user: 'mailcatcher',
-      pass: 'mailcatcher'
+      pass: process.env.EMAIL_PASSWORD
     }
   };
 

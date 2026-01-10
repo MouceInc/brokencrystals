@@ -1,3 +1,5 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script>
 jQuery(document).ready(function($) {
   "use strict";
 
@@ -116,7 +118,7 @@ jQuery(document).ready(function($) {
           this_form.find("input:not(input[type=submit]), textarea").val('');
         } else {
           this_form.find('.loading').slideUp();
-          this_form.find('.error-message').slideDown().html(msg);
+          this_form.find('.error-message').slideDown().text(DOMPurify.sanitize(msg));
         }
       }
     });
@@ -124,3 +126,108 @@ jQuery(document).ready(function($) {
   });
 
 });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script>
+jQuery(document).ready(function($) {
+  $('form.php-email-form').submit(function() {
+    var this_form = $(this);
+    $.ajax({
+      type: "POST",
+      url: action,
+      data: str,
+      success: function(msg) {
+        if (msg == 'OK') {
+        } else {
+          this_form.find('.error-message').slideDown().text(DOMPurify.sanitize(msg));
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script>
+jQuery(document).ready(function($) {
+  $('form.php-email-form').submit(function() {
+    var this_form = $(this);
+    $.ajax({
+      type: "POST",
+      url: action,
+      data: str,
+      success: function(msg) {
+        if (msg == 'OK') {
+        } else {
+          this_form.find('.error-message').slideDown().text(DOMPurify.sanitize(msg));
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script>
+jQuery(document).ready(function($) {
+  $('form.php-email-form').submit(function() {
+    var this_form = $(this);
+    $.ajax({
+      type: "POST",
+      url: action,
+      data: str,
+      success: function(msg) {
+        if (msg == 'OK') {
+        } else {
+          this_form.find('.error-message').slideDown().text(DOMPurify.sanitize(msg));
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script>
+jQuery(document).ready(function($) {
+  $('form.php-email-form').submit(function() {
+    var this_form = $(this);
+    $.ajax({
+      type: "POST",
+      url: action,
+      data: str,
+      success: function(msg) {
+        if (msg == 'OK') {
+        } else {
+          this_form.find('.error-message').slideDown().text(DOMPurify.sanitize(msg));
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script>
+jQuery(document).ready(function($) {
+  $('form.php-email-form').submit(function() {
+    var this_form = $(this);
+    $.ajax({
+      type: "POST",
+      url: action,
+      data: str,
+      success: function(msg) {
+        if (msg == 'OK') {
+        } else {
+          this_form.find('.error-message').slideDown().text(DOMPurify.sanitize(msg));
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script>
+jQuery(document).ready(function($) {
+  $('form.php-email-form').submit(function

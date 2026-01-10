@@ -50,7 +50,7 @@ jobs:
       - name: Snyk Code test
         continue-on-error: true
         run: |
-          snyk code test --fail-on-severity=high --json > code.json || true
+          snyk code test --fail-on-severity=high --json > code.json 
           snyk-to-html -i code.json -o snyk_brokencrystals_sast.html
 
       - name: Snyk Open Source monitor
@@ -59,7 +59,7 @@ jobs:
       - name: Snyk Open Source scan
         continue-on-error: true
         run: |
-          snyk test --fail-on-severity=high --json > oss.json || true
+          snyk test --fail-on-severity=high --json > oss.json  
           snyk-to-html -i oss.json -o snyk_brokencrystals_oss.html
 
       - name: Upload HTML reports as artifacts

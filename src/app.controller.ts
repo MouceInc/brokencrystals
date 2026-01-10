@@ -85,9 +85,8 @@ export class AppController {
   @ApiOkResponse({
     description: 'Redirected'
   })
-  @Redirect()
   async redirect(@Query('url') url: string) {
-    return { url };
+    return { url: encodeURIComponent(url) };
   }
 
   @Post('metadata')

@@ -19,6 +19,7 @@ import * as https from 'https';
 import fastify from 'fastify';
 import { fastifyStatic, ListRender } from '@fastify/static';
 import { join, dirname } from 'path';
+import { rateLimit } from 'express-rate-limit';
 import rawbody from 'raw-body';
 
 const renderDirList: ListRender = (dirs, files) => {
@@ -109,10 +110,10 @@ async function bootstrap() {
       );
     }
 
-    readFile(
-      join(__dirname, '..', 'client', 'dist', 'index.html'),
-      'utf8',
-      (err, data) => {
+    const limiter = rateLimit({
+      windowMs: 30 * 60 * 1000, // 30 minutes
+      limit: 5, // Limit each IP to 5 requests per windowMs
+    });
         if (err) {
           res.statusCode = 500;
           res.end('Internal Server Error');
@@ -121,8 +122,15 @@ async function bootstrap() {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/html');
         res.end(data);
-      }
-    );
+
+    limiter(req, res, () => {
+      readFile(
+        join(__dirname, '..', 'client', 'dist', 'index.html'),
+        'utf8',
+        (err, data) => {
+        }
+      );
+    });
   });
 
   await server.register(fastifyStatic, {

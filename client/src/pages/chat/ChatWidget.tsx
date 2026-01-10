@@ -80,7 +80,9 @@ export const ChatWidget: FC = () => {
             {msg.role === 'user' ? (
               msg.content
             ) : msg.content ? (
-              <UnsafeComponent html={msg.content} />
+              <UnsafeComponent>
+                {msg.content}
+              </UnsafeComponent>
             ) : (
               'Chat API Error'
             )}
