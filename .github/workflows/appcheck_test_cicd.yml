@@ -2,14 +2,14 @@
 # It securely retrieves AWS environment variables and secrets, runs the scan, monitors its progress,
 # and fetches the final results using the AppCheck CLI.
 # Here is a documentation for AppCheck CLI https://support.appcheck-ng.com/hc/en-us/articles/24509661124253-Using-the-AppCheck-CLI-Tool
-# Request for all AWS environment variables from Infosec
+# If you do not have access to your own AWS accounts to use the AWS credential actions, request all AWS environment variables from Infosec via infosec-devsecops@jdplc.com
 
 name: AppCheck-DAST-Scan
 on:
-  pull_request:
+  push:
     branches:
-      - stable
-  workflow_dispatch: {}
+      - <branch name>
+  workflow_dispatch: {} #manually trigger workflow- preferably trigger workflow on release tags or scheduled(cron job) on a nightly run
 
 concurrency:
   group: ${{ github.workflow }}
@@ -18,16 +18,19 @@ concurrency:
 env:
 #   AWS_REGION: ${{ vars.AWS_REGION }}
    AWS_S3_BUCKET: ${{ vars.APPCHECK_S3_BUCKET }}
-   SCAN_ID: ${{ vars.SCAN_ID }}
+   SCAN_ID: ${{ vars.SCAN_ID }} #Scan ID from AppCheck UI- Reach out to infosec for this
 #   AWS_ARN: ${{ vars.AWS_SEC_PROD_ROLE_ARN }}
 
 jobs:
   scan_job:
     runs-on: ubuntu-latest
+    continue-on-error: false
     permissions:
       id-token: write
       contents: read
+   
 
+## GitHub actions AWS assume role via OIDC
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,12 +40,21 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_SECURITY_PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          
+      # - name: check public IP address of runner
+      #   run: curl -s https://api.ipify.org
 
+      ##Step to check internal ip address of github actions runner
+      # - name: Check Internal IP address of runner
+      #   run: ip a
+      
+  ## Download AppCheck-cli for S3 bucket
       - name: Download AppCheck CLI from S3
         run: |
           aws s3 cp s3://$AWS_S3_BUCKET/appcheck-cli ./appcheck-cli
           chmod +x ./appcheck-cli
-
+          
+   ## Start AppCheck Scan
       - name: Start AppCheck Scan (fetch secret from Secrets Manager in-memory)
         shell: bash
         run: |
@@ -54,22 +66,23 @@ jobs:
           }
           trap cleanup EXIT
 
-          # Fetch AppCheck API key from AWS Secrets Manager into a shell variable (in-memory only).
-          # Do NOT write it to files, GITHUB_ENV or step outputs.
+          # Fetch AppCheck API key from AWS Secrets Manager into a shell variable (in-memory only). Do NOT write it to files, GITHUB_ENV or step outputs.
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
             --region  ${{ vars.AWS_REGION }}\
-            --query SecretString --output text)
+            --query SecretString --output text | jq -r '.AppCheck_CICD')
 
-          # Immediately pass the secret to the CLI via stdin to avoid persisting as env or file.
-          # Replace --token-stdin with the appropriate flag your CLI supports for stdin-token consumption.
-          
-          APPCHECK_API_KEY="$AppCheck_API" ./appcheck-cli --action start --scan-id "$SCAN_ID"
-
+          # Immediately pass the secret to the CLI to avoid persisting as env or file. Appcheck-cli currently does not support the --token-stdin for stdin-token consumption.
+          # Use the start scan flag to start the scan with the --fail to fail deployment if High vulnerabilities are found
+          APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action start --scan-id "$SCAN_ID" --fail-high
+                    
           # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
           unset AppCheck_API || true
-
+          unset APPCHECK_API_KEY || true
+          
+  
+ ## Watch Scan as it progresses- limited to  6 hours due to GitHub runner limits
   watch_scan_1:
     runs-on: ubuntu-latest
     needs: scan_job
@@ -80,36 +93,41 @@ jobs:
       id-token: write
       contents: read
 
+  
     steps:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_SECURITY_PROD_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-
+          
+   ## Download AppCheck-cli for S3 bucket
       - name: Download AppCheck CLI from S3
         run: |
           aws s3 cp s3://$AWS_S3_BUCKET/appcheck-cli ./appcheck-cli
           chmod +x ./appcheck-cli
 
+    ## Start watch Scan  
       - name: Watch AppCheck Scan (Part 1) — fetch secret in-memory
         shell: bash
         run: |
           set -euo pipefail
           cleanup() { AppCheck_API=""; unset AppCheck_API || true; }
           trap cleanup EXIT
-
+          
+          # Fetch AppCheck API key from AWS Secrets Manager into a shell variable (in-memory only). Do NOT write it to files, GITHUB_ENV or step outputs.
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
             --region ${{ vars.AWS_REGION }} \
-            --query SecretString --output text)
+            --query SecretString --output text | jq -r '.AppCheck_CICD')
 
-           APPCHECK_API_KEY="$AppCheck_API" ./appcheck-cli --action watch --scan-id "$SCAN_ID"
-
+          # Watch scan as it progresses
+          APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action watch --scan-id "$SCAN_ID"
           AppCheck_API=""
           unset AppCheck_API || true
           unset APPCHECK_API_KEY || true
-
+          
+ ## Watch Scan 2 as it progresses- limited to  6 hours due to GitHub runner limits
   watch_scan_2:
     runs-on: ubuntu-latest
     needs: watch_scan_1
@@ -132,24 +150,29 @@ jobs:
           aws s3 cp s3://$AWS_S3_BUCKET/appcheck-cli ./appcheck-cli
           chmod +x ./appcheck-cli
 
+    ## Start watch Scan  
       - name: Watch AppCheck Scan (Part 2) — fetch secret in-memory
         shell: bash
         run: |
           set -euo pipefail
-          cleanup() { SECRET=""; unset SECRET || true; }
+          cleanup() { AppCheck_API=""; unset AppCheck_API || true; }
           trap cleanup EXIT
 
+          # Fetch AppCheck API key from AWS Secrets Manager into a shell variable (in-memory only). Do NOT write it to files, GITHUB_ENV or step outputs.
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
             --region  ${{ vars.AWS_REGION }} \
-            --query SecretString --output text)
+            --query SecretString --output text | jq -r '.AppCheck_CICD')
+            
+          # Watch scan as it progresses
+          APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli  --action watch --scan-id "$SCAN_ID"
 
-           APPCHECK_API_KEY="$AppCheck_API" ./appcheck-cli  --action watch --scan-id "$SCAN_ID"
-
+          # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
           unset AppCheck_API || true
           unset APPCHECK_API_KEY || true
 
+## Final scan job to produce results
   finalize_scan:
     runs-on: ubuntu-latest
     needs: watch_scan_2
@@ -180,17 +203,18 @@ jobs:
           AppCheck_API=$(aws secretsmanager get-secret-value \
             --secret-id AppCheck_CICDToken \
             --region  ${{ vars.AWS_REGION }}\
-            --query SecretString --output text)
+            --query SecretString --output text | jq -r '.AppCheck_CICD')
 
           for i in {1..5}; do
-             APPCHECK_API_KEY="$AppCheck_API" ./appcheck-cli --action results --scan-id "$SCAN_ID" --display-vulns && break
+             APPCHECK_API_KEY=$AppCheck_API ./appcheck-cli --action results --scan-id "$SCAN_ID" --display-vulns && break
             echo "Retrying results in 30 seconds..."
             sleep 30
           done
 
           # Fallback
-           APPCHECK_API_KEY="$AppCheck_API"  ./appcheck-cli --action details --scan-id "$SCAN_ID" --display-vulns
+           APPCHECK_API_KEY=$AppCheck_API  ./appcheck-cli --action details --scan-id "$SCAN_ID" --display-vulns
 
+          # Overwrite and unset variable (also handled by trap)
           AppCheck_API=""
           unset AppCheck_API || true
           unset APPCHECK_API_KEY || true
